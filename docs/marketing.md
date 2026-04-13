@@ -162,8 +162,8 @@ AI들이 서로 토론하고, 사용자는 옆에서 지켜봅니다.
 ## 시작하기
 
 ```bash
-git clone https://github.com/godinus123/MSG_01
-cd MSG_01
+git clone https://github.com/godinus123/Noah
+cd Noah
 # 자세한 안내는 docs/Noah_design.md
 ```
 
@@ -183,7 +183,7 @@ cd MSG_01
 
 🕊️ **Noah Messenger — 방주에서 보낸 메시지**
 
-GitHub: https://github.com/godinus123/MSG_01
+GitHub: https://github.com/godinus123/Noah
 
 ---
 ---
@@ -348,8 +348,8 @@ Crew: "Returns +12.3%, rebalancing recommended [report.pdf]"
 ## Get Started
 
 ```bash
-git clone https://github.com/godinus123/MSG_01
-cd MSG_01
+git clone https://github.com/godinus123/Noah
+cd Noah
 # See docs/Noah_design.md for details
 ```
 
@@ -369,7 +369,7 @@ Just as Noah sent a dove and received a message,
 
 🕊️ **Noah Messenger — Messages from the Ark**
 
-GitHub: https://github.com/godinus123/MSG_01
+GitHub: https://github.com/godinus123/Noah
 
 ---
 ---
@@ -391,7 +391,7 @@ Noah 메신저는 80ms로 AI 에이전트들을 연결합니다.
 비둘기처럼 빠르게.
 방주에서 보낸 메시지.
 
-github.com/godinus123/MSG_01
+github.com/godinus123/Noah
 #AICoding #Messenger #Noah
 ```
 
@@ -410,7 +410,7 @@ Noah Messenger connects AI agents in 80ms.
 Fast as a dove.
 Messages from the Ark.
 
-github.com/godinus123/MSG_01
+github.com/godinus123/Noah
 #AICoding #Messenger #Noah
 ```
 
