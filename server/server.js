@@ -86,7 +86,7 @@ wss.on('connection', (ws, req) => {
 });
 
 // === 시작 ===
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 4001;
 server.listen(PORT, () => {
     logger.info(`🕊️ NOAH Server v0.1 running on :${PORT}`);
     logger.info(`Health: http://localhost:${PORT}/health`);
