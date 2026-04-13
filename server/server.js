@@ -46,6 +46,18 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
+// === HTTP + WebSocket Server ===
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server, path: '/ws' });
+
+// WebSocket 라우터 로드 (라우트보다 먼저 초기화)
+const wsRouter = require('./services/ws_router')(db, logger, wss);
+const aiBot = require('./services/ai_bot')(db, logger, wsRouter);
+
+wss.on('connection', (ws, req) => {
+    wsRouter.handleConnection(ws, req, aiBot);
+});
+
 // 라우터 (별도 파일에서 로드)
 app.use('/api/auth', require('./routes/auth')(db, logger));
 app.use('/api/me', require('./routes/me')(db, logger));
@@ -53,7 +65,7 @@ app.use('/api/devices', require('./routes/devices')(db, logger));
 app.use('/api/friends', require('./routes/friends')(db, logger));
 app.use('/api/messages', require('./routes/messages')(db, logger));
 app.use('/api/files', require('./routes/files')(db, logger, filesDir));
-app.use('/api/rooms', require('./routes/rooms')(db, logger));
+app.use('/api/rooms', require('./routes/rooms')(db, logger, wsRouter));
 
 // 헬스체크
 app.get('/health', (req, res) => {
@@ -72,18 +84,6 @@ app.get('/', (req, res) => {
         version: '0.1.0',
         description: 'Networked Operations Agent Hub'
     });
-});
-
-// === HTTP + WebSocket Server ===
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server, path: '/ws' });
-
-// WebSocket 라우터 로드
-const wsRouter = require('./services/ws_router')(db, logger, wss);
-const aiBot = require('./services/ai_bot')(db, logger, wsRouter);
-
-wss.on('connection', (ws, req) => {
-    wsRouter.handleConnection(ws, req, aiBot);
 });
 
 // === 시작 ===

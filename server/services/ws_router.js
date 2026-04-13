@@ -255,9 +255,30 @@ module.exports = (db, logger, wss) => {
         }
     }
     
+    // 그룹 방 멤버 전원에게 broadcast
+    function broadcastToRoom(db, roomId, message, excludeUserId) {
+        const members = db.prepare(
+            'SELECT user_id FROM room_members WHERE room_id = ?'
+        ).all(roomId);
+
+        for (const member of members) {
+            if (member.user_id === excludeUserId) continue;
+            const devices = userDevices.get(member.user_id);
+            if (!devices) continue;
+
+            for (const devId of devices) {
+                const ws = deviceConnections.get(devId);
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify(message));
+                }
+            }
+        }
+    }
+
     return {
         handleConnection,
         broadcastToUser,
+        broadcastToRoom,
         deviceConnections,
         userDevices
     };

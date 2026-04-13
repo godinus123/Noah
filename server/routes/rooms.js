@@ -30,7 +30,7 @@ function parseStoredPayload(rawPayload, type) {
     }
 }
 
-module.exports = (db, logger) => {
+module.exports = (db, logger, wsRouter) => {
     const router = express.Router();
     router.use(verifyToken);
 
@@ -134,6 +134,24 @@ module.exports = (db, logger) => {
                 'VALUES (?, ?, ?, ?, ?, ?, ?)'
             ).run(msg_id, room_id, req.user.user_id, type, JSON.stringify(normalizedPayload), serverSeq, now);
 
+            // WebSocket으로 방 멤버들에게 실시간 push
+            if (wsRouter) {
+                const fromUser = db.prepare('SELECT username, display_name FROM users WHERE user_id = ?')
+                    .get(req.user.user_id);
+                wsRouter.broadcastToRoom(db, room_id, {
+                    type: 'room_message',
+                    msg_id,
+                    room_id,
+                    from_user_id: req.user.user_id,
+                    from_username: fromUser?.username,
+                    from_display_name: fromUser?.display_name,
+                    msg_type: type,
+                    payload: normalizedPayload,
+                    server_seq: serverSeq,
+                    timestamp: now
+                });
+            }
+
             logger.info('Room msg: ' + req.user.username + ' -> ' + room_id);
             res.json({ msg_id, room_id, server_seq: serverSeq, timestamp: now });
         } catch (err) {
@@ -192,6 +210,52 @@ module.exports = (db, logger) => {
             res.json({ room_id, user_id, status: 'added' });
         } catch (err) {
             logger.error('Add member error:', err);
+            res.status(500).json({ error: 'internal server error' });
+        }
+    });
+
+    // 방 나가기
+    router.delete('/:room_id/leave', (req, res) => {
+        try {
+            const { room_id } = req.params;
+
+            const myRole = db.prepare('SELECT role FROM room_members WHERE room_id = ? AND user_id = ?')
+                .get(room_id, req.user.user_id);
+            if (!myRole) return res.status(404).json({ error: 'not a member' });
+
+            // owner가 나갈 경우: 다른 멤버에게 owner 이전, 없으면 방 삭제
+            if (myRole.role === 'owner') {
+                const nextMember = db.prepare(
+                    'SELECT user_id FROM room_members WHERE room_id = ? AND user_id != ? ORDER BY joined_at ASC LIMIT 1'
+                ).get(room_id, req.user.user_id);
+
+                if (nextMember) {
+                    db.prepare('UPDATE room_members SET role = ? WHERE room_id = ? AND user_id = ?')
+                        .run('owner', room_id, nextMember.user_id);
+                } else {
+                    // 혼자였으면 방 전체 삭제 (CASCADE로 멤버/메시지 같이 삭제)
+                    db.prepare('DELETE FROM rooms WHERE room_id = ?').run(room_id);
+                    logger.info(`Room deleted (last member left): ${room_id}`);
+                    return res.json({ room_id, status: 'room_deleted' });
+                }
+            }
+
+            db.prepare('DELETE FROM room_members WHERE room_id = ? AND user_id = ?')
+                .run(room_id, req.user.user_id);
+
+            // 나간 후 멤버가 0명이면 방 삭제
+            const remaining = db.prepare('SELECT COUNT(*) as cnt FROM room_members WHERE room_id = ?')
+                .get(room_id).cnt;
+            if (remaining === 0) {
+                db.prepare('DELETE FROM rooms WHERE room_id = ?').run(room_id);
+                logger.info(`Room deleted (empty): ${room_id}`);
+                return res.json({ room_id, status: 'room_deleted' });
+            }
+
+            logger.info(`User ${req.user.username} left room ${room_id}`);
+            res.json({ room_id, status: 'left' });
+        } catch (err) {
+            logger.error('Leave room error:', err);
             res.status(500).json({ error: 'internal server error' });
         }
     });
