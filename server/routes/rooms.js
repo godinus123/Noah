@@ -3,6 +3,33 @@ const express = require('express');
 const { verifyToken } = require('./auth');
 const { v4: uuidv4 } = require('uuid');
 
+function normalizePayload(payload, type) {
+    if (type === 'text') {
+        if (typeof payload === 'string') {
+            return { text: payload };
+        }
+
+        if (payload && typeof payload === 'object') {
+            return {
+                ...payload,
+                text: typeof payload.text === 'string' ? payload.text : ''
+            };
+        }
+
+        return { text: '' };
+    }
+
+    return payload;
+}
+
+function parseStoredPayload(rawPayload, type) {
+    try {
+        return normalizePayload(JSON.parse(rawPayload), type);
+    } catch {
+        return normalizePayload(rawPayload, type);
+    }
+}
+
 module.exports = (db, logger) => {
     const router = express.Router();
     router.use(verifyToken);
@@ -91,6 +118,8 @@ module.exports = (db, logger) => {
             const { msg_id, type, payload } = req.body;
             if (!msg_id || !type || !payload) return res.status(400).json({ error: 'msg_id, type, payload required' });
 
+            const normalizedPayload = normalizePayload(payload, type);
+
             const isMember = db.prepare('SELECT 1 FROM room_members WHERE room_id = ? AND user_id = ?')
                 .get(room_id, req.user.user_id);
             if (!isMember) return res.status(403).json({ error: 'not a member' });
@@ -103,7 +132,7 @@ module.exports = (db, logger) => {
             db.prepare(
                 'INSERT INTO room_messages (msg_id, room_id, from_user_id, type, payload, server_seq, created_at) ' +
                 'VALUES (?, ?, ?, ?, ?, ?, ?)'
-            ).run(msg_id, room_id, req.user.user_id, type, JSON.stringify(payload), serverSeq, now);
+            ).run(msg_id, room_id, req.user.user_id, type, JSON.stringify(normalizedPayload), serverSeq, now);
 
             logger.info('Room msg: ' + req.user.username + ' -> ' + room_id);
             res.json({ msg_id, room_id, server_seq: serverSeq, timestamp: now });
@@ -133,7 +162,10 @@ module.exports = (db, logger) => {
                 'WHERE rm.room_id = ? AND rm.server_seq > ? ORDER BY rm.server_seq ASC LIMIT ?'
             ).all(room_id, afterSeq, msgLimit);
 
-            res.json(messages.map(m => ({ ...m, payload: JSON.parse(m.payload) })));
+            res.json(messages.map(m => ({
+                ...m,
+                payload: parseStoredPayload(m.payload, m.type)
+            })));
         } catch (err) {
             logger.error('Room messages error:', err);
             res.status(500).json({ error: 'internal server error' });
