@@ -1,0 +1,68 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Message bubble base -->
+    <Style x:Key="MessageBubbleBase" TargetType="Border">
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="Margin" Value="4,2"/>
+        <Setter Property="MaxWidth" Value="400"/>
+    </Style>
+
+    <Style x:Key="MyMessageBubble" TargetType="Border" BasedOn="{StaticResource MessageBubbleBase}">
+        <Setter Property="Background" Value="{DynamicResource MyMessageBrush}"/>
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+    </Style>
+
+    <Style x:Key="OtherMessageBubble" TargetType="Border" BasedOn="{StaticResource MessageBubbleBase}">
+        <Setter Property="Background" Value="{DynamicResource OtherMessageBrush}"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+    </Style>
+
+    <Style x:Key="AiMessageBubble" TargetType="Border" BasedOn="{StaticResource MessageBubbleBase}">
+        <Setter Property="Background" Value="{DynamicResource AiMessageBrush}"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+    </Style>
+
+    <!-- Friend list item -->
+    <Style x:Key="FriendListItem" TargetType="Border">
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#10000000"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Input textbox -->
+    <Style x:Key="ChatInput" TargetType="TextBox">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Padding" Value="10,8"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="AcceptsReturn" Value="False"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Send button -->
+    <Style x:Key="SendButton" TargetType="Button">
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="20">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

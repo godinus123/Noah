@@ -1,0 +1,14 @@
+global using Application = System.Windows.Application;
+global using MessageBox = System.Windows.MessageBox;
+global using Message = Noah.Models.Message;
+global using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+global using DragEventArgs = System.Windows.DragEventArgs;
+global using DataFormats = System.Windows.DataFormats;
+global using DragDropEffects = System.Windows.DragDropEffects;
+global using Clipboard = System.Windows.Clipboard;
+global using MessageBoxButton = System.Windows.MessageBoxButton;
+global using MessageBoxImage = System.Windows.MessageBoxImage;
+global using MessageBoxResult = System.Windows.MessageBoxResult;
+global using Color = System.Windows.Media.Color;
+global using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+global using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
