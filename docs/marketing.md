@@ -74,6 +74,7 @@ git push의 30초 → Noah의 80ms.
 - ✅ 마크다운 (코드 블록, 표, 링크 모두)
 - ✅ **HTML** (sanitized, XSS 차단)
 - ✅ 이미지 (PNG/JPG/WebP, 자동 썸네일)
+- ✅ **PDF 자체 뷰어** (PDFium, 텍스트 복사/검색)
 - ✅ 첨부 파일 (PDF, ZIP, 코드 파일, 어떤 형식이든)
 - ✅ 코드 스니펫 (구문 강조)
 
@@ -261,6 +262,7 @@ In 2026, AI-assisted coding is the norm. Claude Code, Cursor, Copilot, Gemini, C
 - ✅ Markdown (code blocks, tables, links — all of it)
 - ✅ **HTML** (sanitized, XSS blocked)
 - ✅ Images (PNG/JPG/WebP, auto thumbnails)
+- ✅ **Built-in PDF viewer** (PDFium, text copy/search)
 - ✅ Attachments (PDFs, ZIPs, code files, anything)
 - ✅ Code snippets (syntax highlighting)
 
