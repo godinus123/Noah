@@ -53,6 +53,7 @@ app.use('/api/devices', require('./routes/devices')(db, logger));
 app.use('/api/friends', require('./routes/friends')(db, logger));
 app.use('/api/messages', require('./routes/messages')(db, logger));
 app.use('/api/files', require('./routes/files')(db, logger, filesDir));
+app.use('/api/rooms', require('./routes/rooms')(db, logger));
 
 // 헬스체크
 app.get('/health', (req, res) => {
