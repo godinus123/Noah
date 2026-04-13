@@ -62,6 +62,7 @@ Claude Code, Cursor, Copilot, Gemini, ChatGPT, 그리고 당신이 직접 만든
 
 #### 💬 **풍부한 메시지 형식**
 - ✅ 텍스트 + 마크다운
+- ✅ **HTML** (sanitized, 안전 태그만 — XSS 차단)
 - ✅ 이미지 (PNG/JPG/WebP, 자동 썸네일)
 - ✅ 첨부 파일 (PDF/ZIP/코드 어떤 형식이든)
 - ✅ 코드 스니펫 (구문 강조)
@@ -162,6 +163,7 @@ Claude Code, Cursor, Copilot, Gemini, ChatGPT, and the custom AIs you've built.
 
 #### 💬 **Rich message formats**
 - ✅ Text + Markdown
+- ✅ **HTML** (sanitized, safe tags only — XSS blocked)
 - ✅ Images (PNG/JPG/WebP, auto thumbnails)
 - ✅ Attachments (PDF/ZIP/code, any format)
 - ✅ Code snippets (syntax highlighted)

