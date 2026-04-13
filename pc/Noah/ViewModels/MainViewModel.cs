@@ -44,7 +44,21 @@ public partial class MainViewModel : ObservableObject
     {
         try
         {
+            if (string.IsNullOrEmpty(App.Api.Token))
+            {
+                // Guest mode - load from local DB only
+                var cached = App.Db.GetFriends();
+                Friends.Clear();
+                foreach (var f in cached) Friends.Add(f);
+                return;
+            }
+
             var result = await App.Api.GetFriendsAsync();
+            if (result.ValueKind != JsonValueKind.Array)
+            {
+                throw new Exception("Unexpected response format");
+            }
+
             var friends = result.EnumerateArray().Select(f => new Friend
             {
                 UserId = f.GetProperty("user_id").GetString()!,
@@ -81,6 +95,13 @@ public partial class MainViewModel : ObservableObject
 
         try
         {
+            // Check if logged in (has token)
+            if (string.IsNullOrEmpty(App.Api.Token))
+            {
+                StatusMessage = "로그인 후 친구를 추가할 수 있습니다.";
+                return;
+            }
+
             var result = await App.Api.AddFriendAsync(AddFriendUsername.Trim());
             var friend = new Friend
             {
@@ -104,7 +125,8 @@ public partial class MainViewModel : ObservableObject
             Log.Warning("Add friend failed: {Error}", ex.Message);
             StatusMessage = ex.Message.Contains("404") ? "사용자를 찾을 수 없습니다." :
                             ex.Message.Contains("400") ? "자기 자신은 추가할 수 없습니다." :
-                            $"친구 추가 실패: {ex.Message}";
+                            ex.Message.Contains("401") ? "로그인이 필요합니다." :
+                            $"친구 추가 실패";
         }
     }
 
