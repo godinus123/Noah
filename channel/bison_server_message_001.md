@@ -29,7 +29,7 @@ NOAH v0.1 메신저 서버를 처음부터 구축합니다.
 
 ```bash
 # 비손서버에서 실행
-cd ~
+cd /home/neowine
 mkdir -p Noah
 cd Noah
 
@@ -81,7 +81,7 @@ pm2 --version
 ### 3. 의존성 설치
 
 ```bash
-cd ~/Noah/server
+cd /home/neowine/Noah/server
 npm install
 ```
 
@@ -137,7 +137,7 @@ npm rebuild better-sqlite3
 ### Step 1: 직접 실행 (테스트)
 
 ```bash
-cd ~/Noah/server
+cd /home/neowine/Noah/server
 npm start
 ```
 
@@ -240,7 +240,7 @@ cloudflared tunnel --url http://localhost:3001
 
 ```
 [ ] T1.  Node.js 20+ 설치 확인
-[ ] T2.  ~/Noah/ 폴더 생성 + 클론
+[ ] T2.  /home/neowine/Noah/ 폴더 생성 + 클론
 [ ] T3.  npm install 성공 (better-sqlite3 빌드 OK)
 [ ] T4.  .env 파일 설정 (JWT_SECRET, ANTHROPIC_API_KEY)
 [ ] T5.  npm start로 직접 실행 → "running on :3001" 표시
@@ -294,7 +294,7 @@ cloudflared tunnel --url http://localhost:3001
 ### 문제 1: better-sqlite3 빌드 실패
 ```bash
 sudo apt install -y build-essential python3 python3-dev
-cd ~/Noah/server
+cd /home/neowine/Noah/server
 rm -rf node_modules
 npm install
 ```
@@ -311,7 +311,7 @@ sudo lsof -ti:3001 | xargs sudo kill -9
 pm2 logs noah-server | grep -i "ai bot"
 
 # .env 확인
-grep ANTHROPIC ~/Noah/server/.env
+grep ANTHROPIC /home/neowine/Noah/server/.env
 
 # CPA Neowine API 접근 가능 확인
 curl -H "x-api-key: $ANTHROPIC_API_KEY" \
@@ -372,7 +372,7 @@ v0.2 (이후 별도 의뢰):
 `Noah/channel/` 폴더에 답장 마크다운 push:
 
 ```bash
-cd ~/Noah
+cd /home/neowine/Noah
 cat > channel/bison_server_message_001.md << 'EOF'
 # [비손서버→크루] NOAH v0.1 작업 보고
 
